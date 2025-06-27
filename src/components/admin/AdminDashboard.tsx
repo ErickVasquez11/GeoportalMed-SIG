@@ -3,6 +3,7 @@ import { Shield, Building2, Heart, Users, BarChart3, LogOut, Plus, AlertTriangle
 import { UnidMedic } from './UnidMedic';
 import { ClinicMedic } from './ClinicMedic';
 import { EmergencyZones } from './EmergencyZones';
+import { PopulationDensity } from './PopulationDensity';
 
 interface UserProfile {
   id: string;
@@ -18,7 +19,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, userProfile, onSignOut }) => {
   // Inicializar en 'unidMedic' ya que 'overview' está desactivado
-  const [activeSection, setActiveSection] = useState<'unidMedic' | 'clinicMedic' | 'emergencyZones'>('unidMedic');
+  const [activeSection, setActiveSection] = useState<'unidMedic' | 'clinicMedic' | 'emergencyZones'| 'populationDensity'>('unidMedic');
 
   const menuItems = [
     {
@@ -38,6 +39,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, userProfil
       label: 'Zonas de Emergencia',
       icon: AlertTriangle,
       description: 'Gestionar zonas de riesgo'
+    },
+     {
+      id: 'populationDensity' as const,
+      label: 'Densidad Poblacional',
+      icon: Users,
+      description: 'Gestionar datos demográficos'
     }
   ];
 
@@ -51,6 +58,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, userProfil
         return <ClinicMedic user={user} userProfile={userProfile} />;
          case 'emergencyZones':
         return <EmergencyZones user={user} />;
+        case 'populationDensity':
+        return <PopulationDensity user={user} />;
       default:
         return null;
     }
