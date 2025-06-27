@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, Send, Minimize2, Maximize2, MessageCircle } from 'lucide-react';
+import { Bot, Send, Minimize2, Maximize2, MessageCircle, AlertTriangle } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -13,7 +13,7 @@ export const ChatBot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: '¡Hey! Soy el ChatBot del Geoportal de Centros de Asistencia Médica. ¿En qué puedo ayudarte?',
+      text: '¡Hola! Soy el asistente del Geoportal Médico. Puedo ayudarte con información sobre centros médicos, zonas de emergencia, análisis de riesgo y rutas. ¿En qué puedo asistirte?',
       isUser: false,
       timestamp: new Date()
     }
@@ -21,16 +21,23 @@ export const ChatBot: React.FC = () => {
   const [inputText, setInputText] = useState('');
 
   const responses = {
-    'hola': '¡Hola! ¿Cómo puedo ayudarte con información médica hoy?',
-    'hospital': 'Puedo ayudarte a encontrar hospitales cerca de tu ubicación. Los hospitales están marcados en rojo en el mapa.',
-    'clinica': 'Las clínicas están marcadas en azul en el mapa. Ofrecen servicios especializados y consultas programadas.',
-    'emergencia': 'Para emergencias médicas, los hospitales con servicio 24 horas están disponibles. Puedes ver la ruta al más cercano en el mapa.',
-    'ubicacion': 'Tu ubicación actual se muestra en el mapa. Desde ahí puedes ver los centros médicos más cercanos.',
-    'horarios': 'Los horarios varían por centro. Hospitales generalmente 24hrs, clínicas y centros de salud tienen horarios específicos.',
-    'cobertura': 'El análisis de cobertura muestra áreas con acceso médico en un radio de 1km. Las zonas sin cobertura se destacan en el mapa.',
-    'ruta': 'Para crear una ruta, haz clic en cualquier centro médico del mapa o selecciona uno de la tabla de centros médicos.',
-    'servicios': 'Cada centro médico ofrece diferentes servicios. Puedes ver los servicios disponibles en los popups del mapa o en la tabla.',
-    'default': 'Puedo ayudarte con información sobre centros médicos, horarios, servicios, emergencias, y cómo llegar a los centros más cercanos.'
+    'hola': '¡Hola! ¿Cómo puedo ayudarte con información médica y análisis de emergencias hoy?',
+    'hospital': 'Los hospitales están marcados en rojo en el mapa. Muchos tienen servicio de emergencias 24 horas. Puedes activar las zonas de riesgo para ver la cobertura de emergencias.',
+    'clinica': 'Las clínicas están marcadas en azul en el mapa. Ofrecen servicios especializados y consultas programadas. Algunas también tienen servicios de emergencia.',
+    'emergencia': 'Para emergencias médicas: 1) Activa la capa "Zonas de Riesgo" en el análisis espacial, 2) Los hospitales 24h están disponibles, 3) Puedes ver tiempos de respuesta por zona.',
+    'zona': 'Las zonas de emergencia muestran áreas con mayor tasa de incidentes médicos. Verde=bajo riesgo, Amarillo=medio, Rojo=alto, Rojo oscuro=crítico. Haz clic en las zonas para más detalles.',
+    'riesgo': 'El análisis de riesgo se basa en: tasa de emergencias por 1000 habitantes, tiempo de respuesta promedio, y proximidad a hospitales. Activa "Zonas de Riesgo" para verlo.',
+    'analisis': 'El análisis espacial incluye: 1) Áreas de cobertura médica, 2) Zonas de riesgo de emergencias, 3) Densidad poblacional. Usa los controles en el panel lateral.',
+    'incidente': 'Los incidentes se muestran como puntos en el mapa cuando activas las zonas de riesgo. Los que parpadean están en curso, los estáticos ya fueron resueltos.',
+    'tiempo': 'Los tiempos de respuesta varían: zonas urbanas 8-12 min, zonas rurales 20-25 min. Las zonas críticas pueden tener tiempos superiores a 20 minutos.',
+    'cobertura': 'La cobertura médica muestra áreas con acceso a centros médicos en un radio de 1km. Las zonas sin cobertura se identifican para planificación.',
+    'ubicacion': 'Tu ubicación se muestra con un punto azul pulsante. Desde ahí puedes ver centros médicos cercanos y el nivel de riesgo de tu zona.',
+    'horarios': 'Los horarios varían: Hospitales=24hrs, Clínicas=horarios específicos, Centros de salud=7AM-4PM generalmente. Haz clic en cualquier marcador para ver horarios exactos.',
+    'ruta': 'Para crear rutas: 1) Haz clic en cualquier centro médico, 2) Se creará automáticamente una ruta desde tu ubicación, 3) Verás distancia y tiempo estimado.',
+    'servicios': 'Cada centro ofrece diferentes servicios. Los hospitales tienen emergencias, las clínicas especialidades, los centros de salud medicina preventiva.',
+    'critico': 'Las zonas críticas (rojo oscuro) tienen >40 emergencias por 1000 habitantes y tiempos de respuesta elevados. Requieren atención prioritaria.',
+    'estadisticas': 'Las estadísticas incluyen: total de incidentes, tiempo promedio de respuesta, zonas críticas, y hospitales con emergencias 24h.',
+    'default': 'Puedo ayudarte con: centros médicos, zonas de emergencia, análisis de riesgo, rutas, horarios, servicios y estadísticas. ¿Qué te interesa saber específicamente?'
   };
 
   const handleSend = () => {
@@ -70,9 +77,9 @@ export const ChatBot: React.FC = () => {
     setInputText('');
   };
 
-  // Avatar del robot
+  // Avatar del robot mejorado
   const RobotAvatar = ({ size = 'normal' }: { size?: 'normal' | 'large' }) => (
-    <div className={`${size === 'large' ? 'w-12 h-12' : 'w-10 h-10'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg`}>
+    <div className={`${size === 'large' ? 'w-12 h-12' : 'w-10 h-10'} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg relative`}>
       <div className="relative">
         {/* Cabeza del robot */}
         <div className={`${size === 'large' ? 'w-7 h-7' : 'w-6 h-6'} bg-white rounded-sm relative`}>
@@ -86,6 +93,10 @@ export const ChatBot: React.FC = () => {
         <div className={`absolute -top-1 left-1 w-0.5 ${size === 'large' ? 'h-1.5' : 'h-1'} bg-white rounded-full`}></div>
         <div className={`absolute -top-1 right-1 w-0.5 ${size === 'large' ? 'h-1.5' : 'h-1'} bg-white rounded-full`}></div>
       </div>
+      {/* Indicador de emergencias */}
+      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+        <AlertTriangle className="w-2 h-2 text-white" />
+      </div>
     </div>
   );
 
@@ -95,17 +106,21 @@ export const ChatBot: React.FC = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="m-6 bg-gradient-to-br from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300 group"
+          className="m-6 bg-gradient-to-br from-blue-600 to-blue-700 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300 group relative"
         >
           <div className="relative">
             <MessageCircle className="w-6 h-6" />
             {/* Indicador de disponibilidad */}
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+            {/* Indicador de emergencias */}
+            <div className="absolute -top-2 -left-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+              <AlertTriangle className="w-2 h-2 text-white" />
+            </div>
           </div>
           
-          {/* Tooltip */}
+          {/* Tooltip mejorado */}
           <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-            Asistente Médico
+            Asistente de Emergencias Médicas
             <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
           </div>
         </button>
@@ -114,7 +129,7 @@ export const ChatBot: React.FC = () => {
       {/* Ventana del chat flotante */}
       {isOpen && (
         <div className="m-6 bg-white rounded-2xl shadow-2xl border border-gray-200 w-96 h-[500px] flex flex-col overflow-hidden chat-window">
-          {/* Header del chatbot */}
+          {/* Header del chatbot mejorado */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
             <div className="flex items-center space-x-3">
               <RobotAvatar />
@@ -122,7 +137,7 @@ export const ChatBot: React.FC = () => {
                 <span className="font-semibold text-white">Asistente Médico</span>
                 <div className="flex items-center text-xs text-blue-100">
                   <div className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></div>
-                  En línea
+                  <span>Análisis de emergencias activo</span>
                 </div>
               </div>
             </div>
@@ -169,7 +184,7 @@ export const ChatBot: React.FC = () => {
             ))}
           </div>
 
-          {/* Input */}
+          {/* Input mejorado */}
           <div className="p-4 border-t border-gray-200 bg-white">
             <div className="flex items-center space-x-3">
               <div className="flex-1 relative">
@@ -178,7 +193,7 @@ export const ChatBot: React.FC = () => {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Escribe tu pregunta..."
+                  placeholder="Pregunta sobre emergencias, zonas de riesgo..."
                   className="w-full border border-gray-300 rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12 shadow-sm"
                 />
                 <button
@@ -190,11 +205,33 @@ export const ChatBot: React.FC = () => {
                 </button>
               </div>
             </div>
+            
+            {/* Sugerencias rápidas */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button 
+                onClick={() => setInputText('zonas de riesgo')}
+                className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full hover:bg-red-200 transition-colors"
+              >
+                Zonas de riesgo
+              </button>
+              <button 
+                onClick={() => setInputText('emergencias')}
+                className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full hover:bg-orange-200 transition-colors"
+              >
+                Emergencias
+              </button>
+              <button 
+                onClick={() => setInputText('hospitales')}
+                className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full hover:bg-blue-200 transition-colors"
+              >
+                Hospitales
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Estilos CSS */}
+      {/* Estilos CSS mejorados */}
       <style>{`
         @keyframes slideInUp {
           from {

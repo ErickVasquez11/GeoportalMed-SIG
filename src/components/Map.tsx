@@ -3,6 +3,15 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MedicalCenter, UserLocation, LayerControls } from '../types';
 import { calculateDistance, findNearestCenter, getCenterColor, getCenterIconSVG, getUserLocationIconSVG, formatDistance, formatDuration } from '../utils/mapUtils';
+import { useEmergencyData } from '../hooks/useEmergencyData';
+import { 
+  getRiskZoneColor, 
+  getIncidentIcon, 
+  getSeverityColor, 
+  formatEmergencyRate, 
+  formatResponseTime,
+  calculateZoneMetrics
+} from '../utils/emergencyUtilsDB';
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -29,16 +38,21 @@ export const Map: React.FC<MapProps> = ({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const coverageCirclesRef = useRef<L.Circle[]>([]);
+  const riskZoneCirclesRef = useRef<L.Circle[]>([]);
+  const incidentMarkersRef = useRef<L.Marker[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const routeLineRef = useRef<L.Polyline | null>(null);
   const [routeInfo, setRouteInfo] = useState<{distance: number, duration: number} | null>(null);
+
+  // Hook para datos de emergencia desde la base de datos
+  const { emergencyZones, emergencyIncidents, loading: emergencyLoading } = useEmergencyData();
 
   useEffect(() => {
     if (!mapRef.current) return;
 
     // Inicializar el mapa centrado en El Salvador
     const map = L.map(mapRef.current, {
-      zoomControl: false, // Desactivar controles por defecto para evitar conflictos
+      zoomControl: false,
       attributionControl: false
     }).setView([13.7942, -88.8965], 8);
 
@@ -242,6 +256,172 @@ export const Map: React.FC<MapProps> = ({
     }
   }, [layers.coverage, medicalCenters]);
 
+  // 🚨 ACTUALIZAR ZONAS DE RIESGO DE EMERGENCIA DESDE BASE DE DATOS
+  useEffect(() => {
+    if (!mapInstanceRef.current || emergencyLoading) return;
+
+    // Limpiar zonas de riesgo existentes
+    riskZoneCirclesRef.current.forEach(circle => circle.remove());
+    riskZoneCirclesRef.current = [];
+
+    if (layers.riskZones && emergencyZones.length > 0) {
+      console.log('🔄 Rendering emergency zones from database:', emergencyZones.length);
+      
+      emergencyZones.forEach(zone => {
+        const color = getRiskZoneColor(zone.risk_level);
+        const metrics = calculateZoneMetrics(zone, emergencyIncidents);
+        
+        // Crear círculo de zona de riesgo
+        const circle = L.circle([zone.lat, zone.lng], {
+          radius: zone.radius,
+          fillColor: color,
+          fillOpacity: 0.25,
+          color: color,
+          weight: 3,
+          opacity: 0.8,
+          dashArray: zone.risk_level === 'critical' ? '10, 5' : undefined
+        });
+
+        // Popup con información detallada de la zona desde BD
+        const popupContent = `
+          <div class="p-4 min-w-[320px]">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-lg text-gray-900">${zone.name}</h3>
+              <span class="px-3 py-1 text-xs font-bold rounded-full text-white" style="background-color: ${color}">
+                ${zone.risk_level.toUpperCase()}
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-red-50 p-3 rounded-lg">
+                <p class="text-xs text-red-600 font-medium">Tasa de Emergencias</p>
+                <p class="text-lg font-bold text-red-800">${formatEmergencyRate(zone.emergency_rate)}</p>
+              </div>
+              <div class="bg-blue-50 p-3 rounded-lg">
+                <p class="text-xs text-blue-600 font-medium">Tiempo Respuesta</p>
+                <p class="text-lg font-bold text-blue-800">${formatResponseTime(zone.average_response_time)}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-orange-50 p-3 rounded-lg">
+                <p class="text-xs text-orange-600 font-medium">Incidentes Activos</p>
+                <p class="text-lg font-bold text-orange-800">${metrics.activeIncidents}</p>
+              </div>
+              <div class="bg-green-50 p-3 rounded-lg">
+                <p class="text-xs text-green-600 font-medium">Resueltos</p>
+                <p class="text-lg font-bold text-green-800">${metrics.resolvedIncidents}</p>
+              </div>
+            </div>
+
+            <div class="space-y-2 text-sm text-gray-600 mb-3">
+              <p><span class="font-medium">👥 Población:</span> ${zone.population.toLocaleString()} habitantes</p>
+              <p><span class="font-medium">📍 Municipio:</span> ${zone.municipality}, ${zone.department}</p>
+              <p><span class="font-medium">📊 Radio:</span> ${(zone.radius / 1000).toFixed(1)} km</p>
+              <p><span class="font-medium">🏥 Hospitales cercanos:</span> ${zone.nearest_hospitals.length}</p>
+            </div>
+
+            <div class="mt-3 pt-3 border-t border-gray-200">
+              <p class="text-xs text-gray-500">
+                🕒 Última actualización: ${new Date(zone.updated_at).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        `;
+
+        circle.bindPopup(popupContent, {
+          maxWidth: 380,
+          className: 'emergency-zone-popup'
+        });
+        
+        circle.addTo(mapInstanceRef.current!);
+        riskZoneCirclesRef.current.push(circle);
+      });
+    }
+  }, [layers.riskZones, emergencyZones, emergencyIncidents, emergencyLoading]);
+
+  // 🚨 ACTUALIZAR MARCADORES DE INCIDENTES DE EMERGENCIA DESDE BASE DE DATOS
+  useEffect(() => {
+    if (!mapInstanceRef.current || emergencyLoading) return;
+
+    // Limpiar marcadores de incidentes existentes
+    incidentMarkersRef.current.forEach(marker => marker.remove());
+    incidentMarkersRef.current = [];
+
+    if (layers.riskZones && emergencyIncidents.length > 0) {
+      console.log('🔄 Rendering emergency incidents from database:', emergencyIncidents.length);
+      
+      emergencyIncidents.forEach(incident => {
+        const color = getSeverityColor(incident.severity);
+        const icon = getIncidentIcon(incident.incident_type);
+        
+        const incidentIcon = L.divIcon({
+          html: `
+            <div style="
+              background-color: ${color}; 
+              width: 32px; 
+              height: 32px; 
+              border-radius: 50%; 
+              border: 3px solid white; 
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 14px;
+              cursor: pointer;
+              animation: ${!incident.resolved ? 'pulse 2s infinite' : 'none'};
+            ">
+              ${icon}
+            </div>
+          `,
+          className: '',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+
+        const marker = L.marker([incident.lat, incident.lng], { icon: incidentIcon });
+        
+        const popupContent = `
+          <div class="p-3 min-w-[280px]">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-gray-900">Incidente ${incident.incident_type}</h4>
+              <span class="px-2 py-1 text-xs font-bold rounded-full text-white" style="background-color: ${color}">
+                ${incident.severity.toUpperCase()}
+              </span>
+            </div>
+            
+            <div class="space-y-2 text-sm text-gray-600 mb-3">
+              <p><span class="font-medium">🕒 Reportado:</span> ${new Date(incident.reported_at).toLocaleString()}</p>
+              <p><span class="font-medium">📍 Ubicación:</span> ${incident.lat.toFixed(4)}, ${incident.lng.toFixed(4)}</p>
+              ${incident.response_time ? `
+                <p><span class="font-medium">⏱️ Tiempo respuesta:</span> ${incident.response_time} min</p>
+              ` : ''}
+              ${incident.description ? `
+                <p><span class="font-medium">📝 Descripción:</span> ${incident.description}</p>
+              ` : ''}
+              <p><span class="font-medium">📊 Estado:</span> 
+                <span class="${incident.resolved ? 'text-green-600' : 'text-red-600'} font-medium">
+                  ${incident.resolved ? '✅ Resuelto' : '🚨 En curso'}
+                </span>
+              </p>
+              ${incident.resolved_at ? `
+                <p><span class="font-medium">✅ Resuelto:</span> ${new Date(incident.resolved_at).toLocaleString()}</p>
+              ` : ''}
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent, {
+          maxWidth: 320,
+          className: 'incident-popup'
+        });
+        
+        marker.addTo(mapInstanceRef.current!);
+        incidentMarkersRef.current.push(marker);
+      });
+    }
+  }, [layers.riskZones, emergencyIncidents, emergencyLoading]);
+
   // Actualizar ubicación del usuario
   useEffect(() => {
     if (!mapInstanceRef.current || !userLocation) return;
@@ -387,6 +567,16 @@ export const Map: React.FC<MapProps> = ({
           </div>
         </div>
       )}
+
+      {/* Indicador de carga de datos de emergencia */}
+      {emergencyLoading && layers.riskZones && (
+        <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-[1000]">
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm text-gray-700">Cargando zonas de emergencia...</span>
+          </div>
+        </div>
+      )}
       
       {/* CSS para animaciones */}
       <style>{`
@@ -408,6 +598,18 @@ export const Map: React.FC<MapProps> = ({
         
         .custom-popup .leaflet-popup-tip {
           background: white;
+        }
+
+        .emergency-zone-popup .leaflet-popup-content-wrapper {
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2);
+          border: 2px solid #FEE2E2;
+        }
+
+        .incident-popup .leaflet-popup-content-wrapper {
+          border-radius: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+          border: 2px solid #FEF3C7;
         }
 
         /* Asegurar que los controles del mapa no interfieran */

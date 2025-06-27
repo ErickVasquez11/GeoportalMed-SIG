@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Shield, Building2, Heart, Users, BarChart3, LogOut, Plus } from 'lucide-react';
+import { Shield, Building2, Heart, Users, BarChart3, LogOut, Plus, AlertTriangle } from 'lucide-react';
 import { UnidMedic } from './UnidMedic';
 import { ClinicMedic } from './ClinicMedic';
+import { EmergencyZones } from './EmergencyZones';
 
 interface UserProfile {
   id: string;
@@ -17,7 +18,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, userProfile, onSignOut }) => {
   // Inicializar en 'unidMedic' ya que 'overview' está desactivado
-  const [activeSection, setActiveSection] = useState<'unidMedic' | 'clinicMedic'>('unidMedic');
+  const [activeSection, setActiveSection] = useState<'unidMedic' | 'clinicMedic' | 'emergencyZones'>('unidMedic');
 
   const menuItems = [
     {
@@ -31,6 +32,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, userProfil
       label: 'Clínicas Médicas',
       icon: Building2,
       description: 'Gestionar clínicas comunales'
+    },
+      {
+      id: 'emergencyZones' as const,
+      label: 'Zonas de Emergencia',
+      icon: AlertTriangle,
+      description: 'Gestionar zonas de riesgo'
     }
   ];
 
@@ -42,6 +49,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, userProfil
         return <UnidMedic user={user} userProfile={userProfile} />;
       case 'clinicMedic':
         return <ClinicMedic user={user} userProfile={userProfile} />;
+         case 'emergencyZones':
+        return <EmergencyZones user={user} />;
       default:
         return null;
     }

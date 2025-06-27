@@ -58,7 +58,7 @@ export const Login: React.FC<LoginProps> = ({ onSuccess, onSwitchToRegister }) =
             <LogIn className="w-8 h-8 text-blue-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Iniciar Sesión</h1>
-          <p className="text-gray-600">Accede al Geoportal Médico de El Salvador</p>
+          <p className="text-gray-600">Accede Geoportal de Asistencia Médica</p>
         </div>
 
         {/* Demo Notice */}
