@@ -166,50 +166,40 @@ export const Map: React.FC<MapProps> = ({
       ) : 0;
 
       const popupContent = `
-        <div class="p-3 min-w-[280px]">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-bold text-lg text-gray-900">${center.name}</h3>
-            <span class="px-2 py-1 text-xs font-medium rounded-full" style="background-color: ${color}20; color: ${color}">
-              ${center.type === 'hospital' ? 'Hospital' : center.type === 'clinic' ? 'Clínica' : 'Centro de Salud'}
-            </span>
-          </div>
-          
-          <div class="space-y-2 mb-3">
-            <p class="text-sm text-gray-600 flex items-center">
-              <span class="mr-2">📍</span> ${center.address}
-            </p>
-            <p class="text-sm text-gray-600 flex items-center">
-              <span class="mr-2">📞</span> ${center.phone}
-            </p>
-            <p class="text-sm text-gray-600 flex items-center">
-              <span class="mr-2">⏰</span> ${center.schedule}
-            </p>
+          <div class="p-2 min-w-[280px] text-sm">
+            <div class="flex items-center justify-between mb-1">
+              <h3 class="font-bold text-base text-gray-900">${center.name}</h3>
+              <span class="px-2 py-0.5 text-xs font-medium rounded-full" style="background-color: ${color}20; color: ${color}">
+                ${center.type === 'hospital' ? 'Hospital' : center.type === 'clinic' ? 'Clínica' : 'Centro de Salud'}
+              </span>
+            </div>
+            <div class="space-y-1 mb-2">
+              <p class="flex items-center text-gray-600"><span class="mr-2">📍</span> ${center.address}</p>
+              <p class="flex items-center text-gray-600"><span class="mr-2">📞</span> ${center.phone}</p>
+              <p class="flex items-center text-gray-600"><span class="mr-2">⏰</span> ${center.schedule}</p>
+              ${userLocation ? `
+                <p class="flex items-center font-medium text-blue-600"><span class="mr-2">📏</span> ${formatDistance(distance)}</p>
+              ` : ''}
+            </div>
+            <div class="mb-2">
+              <p class="font-medium mb-1 text-gray-900">Servicios:</p>
+              <div class="flex flex-wrap gap-1">
+                ${center.services.map(service => `
+                  <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${service}</span>
+                `).join('')}
+              </div>
+            </div>
             ${userLocation ? `
-              <p class="text-sm font-medium text-blue-600 flex items-center">
-                <span class="mr-2">📏</span> ${formatDistance(distance)}
-              </p>
+              <button 
+                onclick="window.createRoute('${center.id}')" 
+                class="w-full bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <span class="mr-2">🗺️</span> Crear Ruta
+              </button>
             ` : ''}
           </div>
+    `;
 
-          <div class="mb-3">
-            <p class="text-sm font-medium text-gray-900 mb-2">Servicios disponibles:</p>
-            <div class="flex flex-wrap gap-1">
-              ${center.services.map(service => 
-                `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${service}</span>`
-              ).join('')}
-            </div>
-          </div>
-
-          ${userLocation ? `
-            <button 
-              onclick="window.createRoute('${center.id}')" 
-              class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
-            >
-              <span class="mr-2">🗺️</span> Crear Ruta
-            </button>
-          ` : ''}
-        </div>
-      `;
       
       marker.bindPopup(popupContent, {
         maxWidth: 300,
@@ -386,81 +376,72 @@ export const Map: React.FC<MapProps> = ({
         });
 
         // Popup con información detallada de la zona poblacional
-        const popupContent = `
-          <div class="p-4 min-w-[340px]">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-bold text-lg text-gray-900">${zone.name}</h3>
-              <span class="px-3 py-1 text-xs font-bold rounded-full text-white" style="background-color: ${color}">
-                ${zone.density_level.replace('_', ' ').toUpperCase()}
-              </span>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div class="bg-purple-50 p-3 rounded-lg">
-                <p class="text-xs text-purple-600 font-medium">Población Total</p>
-                <p class="text-lg font-bold text-purple-800">${zone.population.toLocaleString()}</p>
+         const popupContent = `
+            <div class="p-2 min-w-[280px] text-sm">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-base text-gray-900">${zone.name}</h3>
+                <span class="px-2 py-0.5 text-xs font-bold rounded-full text-white" style="background-color: ${color}">
+                  ${zone.density_level.replace('_', ' ').toUpperCase()}
+                </span>
               </div>
-              <div class="bg-indigo-50 p-3 rounded-lg">
-                <p class="text-xs text-indigo-600 font-medium">Densidad</p>
-                <p class="text-lg font-bold text-indigo-800">${zone.population_density.toFixed(1)} hab/km²</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div class="bg-green-50 p-3 rounded-lg">
-                <p class="text-xs text-green-600 font-medium">Urbano</p>
-                <p class="text-lg font-bold text-green-800">${zone.urban_percentage}%</p>
-              </div>
-              <div class="bg-yellow-50 p-3 rounded-lg">
-                <p class="text-xs text-yellow-600 font-medium">Rural</p>
-                <p class="text-lg font-bold text-yellow-800">${zone.rural_percentage}%</p>
-              </div>
-            </div>
-
-            <div class="space-y-2 text-sm text-gray-600 mb-3">
-              <p><span class="font-medium">📍 Ubicación:</span> ${zone.municipality}, ${zone.department}</p>
-              <p><span class="font-medium">📊 Área:</span> ${zone.area_km2} km²</p>
-              <p><span class="font-medium">📈 Crecimiento:</span> ${zone.growth_rate}% anual</p>
-              <p><span class="font-medium">🏗️ Infraestructura:</span> ${
-                zone.infrastructure_level === 'advanced' ? 'Avanzada' :
-                zone.infrastructure_level === 'intermediate' ? 'Intermedia' : 'Básica'
-              }</p>
-            </div>
-
-            <div class="mb-3">
-              <p class="text-sm font-medium text-gray-900 mb-2">Distribución por Edad:</p>
-              <div class="grid grid-cols-3 gap-2 text-xs">
-                <div class="bg-blue-50 p-2 rounded text-center">
-                  <p class="font-medium text-blue-800">${zone.age_groups.children.toLocaleString()}</p>
-                  <p class="text-blue-600">0-14 años</p>
+              <div class="grid grid-cols-2 gap-2 mb-2">
+                <div class="bg-purple-50 p-2 rounded-lg">
+                  <p class="text-xs text-purple-600 font-medium">Población</p>
+                  <p class="font-bold text-purple-800">${zone.population.toLocaleString()}</p>
                 </div>
-                <div class="bg-green-50 p-2 rounded text-center">
-                  <p class="font-medium text-green-800">${zone.age_groups.adults.toLocaleString()}</p>
-                  <p class="text-green-600">15-64 años</p>
-                </div>
-                <div class="bg-orange-50 p-2 rounded text-center">
-                  <p class="font-medium text-orange-800">${zone.age_groups.elderly.toLocaleString()}</p>
-                  <p class="text-orange-600">65+ años</p>
+                <div class="bg-indigo-50 p-2 rounded-lg">
+                  <p class="text-xs text-indigo-600 font-medium">Densidad</p>
+                  <p class="font-bold text-indigo-800">${zone.population_density.toFixed(1)} hab/km²</p>
                 </div>
               </div>
-            </div>
-
-            <div class="mb-3">
-              <p class="text-sm font-medium text-gray-900 mb-2">Actividades Económicas:</p>
-              <div class="flex flex-wrap gap-1">
-                ${zone.economic_activity.map(activity => 
-                  `<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">${activity}</span>`
-                ).join('')}
+              <div class="grid grid-cols-2 gap-2 mb-2">
+                <div class="bg-green-50 p-2 rounded-lg">
+                  <p class="text-xs text-green-600 font-medium">Urbano</p>
+                  <p class="font-bold text-green-800">${zone.urban_percentage}%</p>
+                </div>
+                <div class="bg-yellow-50 p-2 rounded-lg">
+                  <p class="text-xs text-yellow-600 font-medium">Rural</p>
+                  <p class="font-bold text-yellow-800">${zone.rural_percentage}%</p>
+                </div>
+              </div>
+              <div class="mb-2">
+                <p class="text-xs font-medium mb-1">Ubicación: ${zone.municipality}, ${zone.department}</p>
+                <p class="text-xs font-medium mb-1">Área: ${zone.area_km2} km²</p>
+                <p class="text-xs font-medium mb-1">Crecimiento: ${zone.growth_rate}%</p>
+                <p class="text-xs font-medium mb-1">Infraestructura: ${
+                  zone.infrastructure_level === 'advanced' ? 'Avanzada' :
+                  zone.infrastructure_level === 'intermediate' ? 'Intermedia' : 'Básica'
+                }</p>
+              </div>
+              <div class="mb-2">
+                <p class="text-xs font-medium mb-1">Distribución por Edad:</p>
+                <div class="flex gap-1 text-xs">
+                  <div class="bg-blue-50 p-1 rounded text-center flex-1">
+                    <p class="font-medium text-blue-800">${zone.age_groups.children.toLocaleString()}</p>
+                    <p class="text-blue-600">0-14</p>
+                  </div>
+                  <div class="bg-green-50 p-1 rounded text-center flex-1">
+                    <p class="font-medium text-green-800">${zone.age_groups.adults.toLocaleString()}</p>
+                    <p class="text-green-600">15-64</p>
+                  </div>
+                  <div class="bg-orange-50 p-1 rounded text-center flex-1">
+                    <p class="font-medium text-orange-800">${zone.age_groups.elderly.toLocaleString()}</p>
+                    <p class="text-orange-600">65+</p>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-2">
+                <p class="text-xs font-medium mb-1">Actividades Económicas:</p>
+                <div class="flex flex-wrap gap-1 text-xs">
+                  ${zone.economic_activity.map(act => `<span class="bg-purple-100 text-purple-800 px-1 py-0.5 rounded-full">${act}</span>`).join('')}
+                </div>
+              </div>
+              <div class="border-t border-gray-200 pt-2 text-gray-500 text-xxs">
+                Última actualización: ${new Date(zone.updated_at).toLocaleDateString()}
               </div>
             </div>
+          `;
 
-            <div class="mt-3 pt-3 border-t border-gray-200">
-              <p class="text-xs text-gray-500">
-                🕒 Última actualización: ${new Date(zone.updated_at).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        `;
 
         circle.bindPopup(popupContent, {
           maxWidth: 400,
