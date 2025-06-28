@@ -11,14 +11,15 @@ import {
   getSeverityColor, 
   formatEmergencyRate, 
   formatResponseTime,
-  calculateZoneMetrics
+  calculateZoneMetrics,
+  getZoneSpecificPolygon
 } from '../utils/emergencyUtilsDB';
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDlDNSAxNC4yNSAxMiAyMiAxMiAyMkMxMiAyMiAxOSAxNC4yNSAxOSA5QzE5IDUuMTMgMTUuODcgMiAxMiAyWk0xMiAxMS41QzEwLjYyIDExLjUgOS41IDEwLjM4IDkuNSA5QzkuNSA3LjYyIDEwLjYyIDYuNSAxMiA2LjVDMTMuMzggNi41IDE0LjUgNy42MiAxNC41IDlDMTQuNSAxMC4zOCAxMy4zOCAxMS41IDEyIDExLjVaIiBmaWxsPSIjMzMzIi8+Cjwvc3ZnPgo=',
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDlDNSAxNC4yNSAxMiAyMiAxMiAyMkMxMiAyMiAxOSAxNC4yNSAxOSA5QzE5IDUuMTMgMTUuODcgMiAxMiAyWk0xMiAxMS41QzEwLjYyIDExLjUgOS41IDEwLjM4IDkuNSA5QzkuNSA7LjYyIDEwLjYyIDYuNSAxMiA2LjVDMTMuMzggNi41IDE0LjUgNy42MiAxNC41IDlDMTQuNSAxMC4zOCAxMy4zOCAxMS41IDEyIDExLjVaIiBmaWxsPSIjMzMzIi8+Cjwvc3ZnPgo=',
+  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDOC4xMyAyIDUgNS4xMyA1IDlDNSAxNC4yNSAxMiAyMiAxMiAyMkMxMiAyMiAxOSAxNC4yNSAxOSA5QzE5IDUuMTMgMTUuODcgMiAxMiAyWk0xMiAxMS41QzEwLjYyIDExLjUgOS41IDEwLjM4IDkuNSA5QzkuNSA3LjYyIDEwLjYyIDYuNSAxMiA2LjVDMTMuMzggNi41IDE0LjUgNy42MiAxNC41IDlDMTQuNSAxMC4zOCAxMy4zOCAxMS41IDEyIDExLjVaIiBmaWxsPSIjMzMzIi8+Cjwvc3ZnPgo=',
   shadowUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDEiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCA0MSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGVsbGlwc2UgY3g9IjIwLjUiIGN5PSIzNy41IiByeD0iMTguNSIgcnk9IjMuNSIgZmlsbD0iIzAwMCIgZmlsbC1vcGFjaXR5PSIwLjMiLz4KPC9zdmc+Cg=='
 });
 
@@ -39,7 +40,7 @@ export const Map: React.FC<MapProps> = ({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const coverageCirclesRef = useRef<L.Circle[]>([]);
-  const riskZoneCirclesRef = useRef<L.Circle[]>([]);
+  const riskZonePolygonsRef = useRef<L.Polygon[]>([]);
   const populationZoneCirclesRef = useRef<L.Circle[]>([]);
   const incidentMarkersRef = useRef<L.Marker[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
@@ -261,24 +262,26 @@ export const Map: React.FC<MapProps> = ({
     }
   }, [layers.coverage, medicalCenters]);
 
-  // 🚨 ACTUALIZAR ZONAS DE RIESGO DE EMERGENCIA DESDE BASE DE DATOS
+  // 🚨 ACTUALIZAR POLÍGONOS IRREGULARES DE ZONAS DE RIESGO DESDE BASE DE DATOS
   useEffect(() => {
     if (!mapInstanceRef.current || emergencyLoading) return;
 
-    // Limpiar zonas de riesgo existentes
-    riskZoneCirclesRef.current.forEach(circle => circle.remove());
-    riskZoneCirclesRef.current = [];
+    // Limpiar polígonos de zonas de riesgo existentes
+    riskZonePolygonsRef.current.forEach(polygon => polygon.remove());
+    riskZonePolygonsRef.current = [];
 
     if (layers.riskZones && emergencyZones.length > 0) {
-      console.log('🔄 Rendering emergency zones from database:', emergencyZones.length);
+      console.log('🔄 Rendering emergency zone polygons from database:', emergencyZones.length);
       
       emergencyZones.forEach(zone => {
         const color = getRiskZoneColor(zone.risk_level);
         const metrics = calculateZoneMetrics(zone, emergencyIncidents);
         
-        // Crear círculo de zona de riesgo
-        const circle = L.circle([zone.lat, zone.lng], {
-          radius: zone.radius,
+        // Obtener polígono específico para la zona
+        const polygonCoords = getZoneSpecificPolygon(zone);
+        
+        // Crear polígono irregular de zona de riesgo
+        const polygon = L.polygon(polygonCoords, {
           fillColor: color,
           fillOpacity: 0.25,
           color: color,
@@ -322,7 +325,7 @@ export const Map: React.FC<MapProps> = ({
             <div class="space-y-2 text-sm text-gray-600 mb-3">
               <p><span class="font-medium">👥 Población:</span> ${zone.population.toLocaleString()} habitantes</p>
               <p><span class="font-medium">📍 Municipio:</span> ${zone.municipality}, ${zone.department}</p>
-              <p><span class="font-medium">📊 Radio:</span> ${(zone.radius / 1000).toFixed(1)} km</p>
+              <p><span class="font-medium">🗺️ Tipo:</span> Polígono irregular</p>
               <p><span class="font-medium">🏥 Hospitales cercanos:</span> ${zone.nearest_hospitals.length}</p>
             </div>
 
@@ -334,13 +337,13 @@ export const Map: React.FC<MapProps> = ({
           </div>
         `;
 
-        circle.bindPopup(popupContent, {
+        polygon.bindPopup(popupContent, {
           maxWidth: 380,
           className: 'emergency-zone-popup'
         });
         
-        circle.addTo(mapInstanceRef.current!);
-        riskZoneCirclesRef.current.push(circle);
+        polygon.addTo(mapInstanceRef.current!);
+        riskZonePolygonsRef.current.push(polygon);
       });
     }
   }, [layers.riskZones, emergencyZones, emergencyIncidents, emergencyLoading]);
@@ -540,22 +543,6 @@ export const Map: React.FC<MapProps> = ({
             </div>
           </div>
         `;
-        // Ajustar el ancho fijo del popup para evitar distorsión y mantener tamaño consistente
-        const fixedWidth = 320;
-        const fixedHeight = 260; // Puedes ajustar la altura según lo necesario
-
-        const styledPopupContent = `
-          <div style="width: ${fixedWidth}px; min-height: ${fixedHeight}px; max-width: ${fixedWidth}px; overflow-y: auto;">
-            ${popupContent}
-          </div>
-        `;
-
-        marker.bindPopup(styledPopupContent, {
-          maxWidth: fixedWidth,
-          minWidth: fixedWidth,
-          className: 'incident-popup',
-          autoPan: false // Evita que el mapa mueva el popup fuera de vista
-        });
 
         marker.bindPopup(popupContent, {
           maxWidth: 320,
@@ -720,7 +707,7 @@ export const Map: React.FC<MapProps> = ({
         <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-[1000]">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm text-gray-700">Cargando zonas de emergencia...</span>
+            <span className="text-sm text-gray-700">Cargando polígonos de emergencia...</span>
           </div>
         </div>
       )}
