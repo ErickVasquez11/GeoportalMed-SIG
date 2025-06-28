@@ -540,6 +540,22 @@ export const Map: React.FC<MapProps> = ({
             </div>
           </div>
         `;
+        // Ajustar el ancho fijo del popup para evitar distorsión y mantener tamaño consistente
+        const fixedWidth = 320;
+        const fixedHeight = 260; // Puedes ajustar la altura según lo necesario
+
+        const styledPopupContent = `
+          <div style="width: ${fixedWidth}px; min-height: ${fixedHeight}px; max-width: ${fixedWidth}px; overflow-y: auto;">
+            ${popupContent}
+          </div>
+        `;
+
+        marker.bindPopup(styledPopupContent, {
+          maxWidth: fixedWidth,
+          minWidth: fixedWidth,
+          className: 'incident-popup',
+          autoPan: false // Evita que el mapa mueva el popup fuera de vista
+        });
 
         marker.bindPopup(popupContent, {
           maxWidth: 320,
