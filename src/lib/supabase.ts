@@ -11,15 +11,15 @@ console.log('Key:', supabaseAnonKey ? 'Present' : 'NOT SET');
 // Verificar si las variables están configuradas correctamente
 const isConfigured = supabaseUrl && 
                     supabaseAnonKey && 
-                    supabaseUrl !== 'your_supabase_project_url' &&
-                    supabaseAnonKey !== 'your_supabase_anon_key' &&
+                    supabaseUrl !== 'https://ijppxtiavgsbijwpfrqi.supabase.co' &&
+                    supabaseAnonKey !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqcHB4dGlhdmdzYmlqd3BmcnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MDE3MTQsImV4cCI6MjA2NTI3NzcxNH0.cPlGztYWCKynZ06HXaqGa3Z5-ZFscXu-drhA1feDV0M' &&
                     supabaseUrl.includes('supabase.co');
 
 if (!isConfigured) {
   console.warn('⚠️ Supabase not configured properly. Please check your .env file.');
   console.warn('📝 Make sure you have:');
-  console.warn('   VITE_SUPABASE_URL=your_actual_supabase_url');
-  console.warn('   VITE_SUPABASE_ANON_KEY=your_actual_supabase_anon_key');
+  console.warn('   VITE_SUPABASE_URL=https://ijppxtiavgsbijwpfrqi.supabase.co');
+  console.warn('   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqcHB4dGlhdmdzYmlqd3BmcnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MDE3MTQsImV4cCI6MjA2NTI3NzcxNH0.cPlGztYWCKynZ06HXaqGa3Z5-ZFscXu-drhA1feDV0M');
 } else {
   console.log('✅ Supabase configured correctly');
 }
@@ -74,8 +74,8 @@ if (isConfigured) {
 } else {
   console.log('🔄 Running in demo mode - Supabase not configured');
   console.log('📝 To connect to real data, configure your .env file with:');
-  console.log('   VITE_SUPABASE_URL=https://your-project.supabase.co');
-  console.log('   VITE_SUPABASE_ANON_KEY=your-anon-key');
+  console.log('    VITE_SUPABASE_URL=https://ijppxtiavgsbijwpfrqi.supabase.co');
+  console.log('   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqcHB4dGlhdmdzYmlqd3BmcnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MDE3MTQsImV4cCI6MjA2NTI3NzcxNH0.cPlGztYWCKynZ06HXaqGa3Z5-ZFscXu-drhA1feDV0M');
 }
 
 export { isConfigured as isSupabaseConfigured };
