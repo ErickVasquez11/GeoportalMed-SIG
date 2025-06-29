@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { env } from 'process';  // Importar env para acceder a las variables de entorno
 
 // Obtener variables de entorno
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || import.meta.env.env.VITE_SUPABASE_ANON_KEY; 
 
 console.log('🔧 Supabase Configuration Check:');
 console.log('URL:', supabaseUrl || 'NOT SET');
