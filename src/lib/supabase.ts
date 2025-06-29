@@ -26,8 +26,8 @@ if (!isConfigured) {
 
 // Crear cliente con valores por defecto si no están configurados
 export const supabase = createClient(
-  supabaseUrl || 'https://demo.supabase.co',
-  supabaseAnonKey || 'demo-key',
+  supabaseUrl || 'https://ijppxtiavgsbijwpfrqi.supabase.co',
+  supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqcHB4dGlhdmdzYmlqd3BmcnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk3MDE3MTQsImV4cCI6MjA2NTI3NzcxNH0.cPlGztYWCKynZ06HXaqGa3Z5-ZFscXu-drhA1feDV0M',
   {
     auth: {
       autoRefreshToken: true,
