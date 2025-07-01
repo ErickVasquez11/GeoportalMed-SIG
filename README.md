@@ -37,15 +37,16 @@ Este proyecto amplía el *Geoportal de Centros de Asistencia Médica* con nuevas
 
 ## 🚀 Tecnologías empleadas
 
-| Componente | Tecnología |
-|-----------|------------|
-| Backend   | Java + Spring Boot |
-| Base de Datos | PostgreSQL + PostGIS |
-| Visualización Geoespacial | Leaflet.js |
-| Frontend | Thymeleaf + Bootstrap |
-| Geocodificación Inversa | Google Maps API |
-| Ruteo | Leaflet-Routing-Machine 3.2.12 |
-| Análisis SIG | QGIS |
+| Componente               | Tecnología |
+|--------------------------|------------|
+| Backend                  | [Java](https://docs.oracle.com/en/java/) + [Spring Boot](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/) |
+| Base de Datos            | [PostgreSQL](https://www.postgresql.org/docs/) + [PostGIS](https://postgis.net/documentation/) |
+| Visualización Geoespacial| [Leaflet.js](https://leafletjs.com/reference.html) |
+| Frontend                 | [Thymeleaf](https://www.thymeleaf.org/documentation.html) + [Bootstrap](https://getbootstrap.com/docs/) |
+| Geocodificación Inversa  | [Google Maps API](https://developers.google.com/maps/documentation) |
+| Ruteo                    | [Leaflet Routing Machine 3.2.12](https://www.liedman.net/leaflet-routing-machine/) |
+| Análisis SIG             | [QGIS](https://docs.qgis.org/) |
+
 
 ---
 
@@ -73,7 +74,10 @@ cd GeoportalMed-SIG
 - Bran García, Diego Marcelo – 00080119  
 - Flamenco Samour, Diego Andrés – 00221020  
 - Vásquez Alfaro, Erick Rickelmy – 00065520  
-- Paz Escobar, Christian Alejandro – 00132720  
+- Paz Escobar, Christian Alejandro – 00132720
+
+Este trabajo se desarrolló a partir del repositorio original:  
+📌 **[Geoportal de Centros de Asistencia Médica](https://github.com/AndresMendoza0030/Geoportal)**
 
 ---
 
